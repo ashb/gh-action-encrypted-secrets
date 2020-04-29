@@ -1,0 +1,29 @@
+name: Test Action
+on: [push, pull_request]
+
+jobs:
+  export-secrets:
+    name: Test action
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out this repo
+      uses: actions/checkout@v2
+    - name: Run action
+      uses: ./
+      with:
+        gpg-priv-key: ''
+        gpg-priv-key-file: tests/keys/github-actions.priv
+        secrets-file: tests/data/example-secrets.yml
+    - name: Test Secrets from env
+      run: |
+        set -xe
+        # Since one of the values of the secret is "1" this should show up in
+        # Github Action logs as `*** should be masked`
+        echo "1 should be masked"
+        echo "plain should be masked"
+        echo "$simple_plain_number should be masked"
+
+        # And test we set the env vars correctly.
+        [[ $simple_plain_number == 1 ]] || echo "should NOT see this"
+        [[ $simple_plain_number == 0 ]] || echo "should see this"
+        [[ $simple_plain_key == plain ]]

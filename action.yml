@@ -1,0 +1,30 @@
+# action.yml
+name: 'Encrypted Secrets from YAML'
+description: 'Decrypt and set env vars for git-trackable secrets, inspired by hiera-eyaml'
+inputs:
+  secrets-file:
+    description: |
+      The encrypted-YAML file containing secrets
+    required: true
+    default: .github/secrets.yml
+  gpg-priv-key:
+    description: |
+      The GPG private key to use to decrypt the entires in the YAML file
+    required: true
+  gpg-priv-key-file:
+    description: |
+      The filename containing the GPG private key. Not recommended, use the
+      gpg-priv-key option and Github Secrets instead
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    GPG_PRIV_KEY: "${{ inputs['gpg-priv-key'] }}"
+  args:
+    - "export"
+    - "--format=github"
+    - "--file=${{ inputs['secrets-file'] }}"
+    - "${{ (inputs['gpg-priv-key-file'] && format('--import-privkey-from-file={0}', inputs['gpg-priv-key-file']) ) || '--import-privkey-from-env=GPG_PRIV_KEY' }}"
+branding:
+  icon: lock
+  color: green
